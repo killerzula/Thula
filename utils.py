@@ -43,20 +43,12 @@ def createDeck():
     return merged
 
 
-def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnInGame:bool):
+def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnInGame:bool, showEligible:bool):
 
     # left, top, width, height
     # The above order is used for rect, see http://www.pygame.org/docs/ref/rect.html
-    # for deck in decks:
-        # if not all([card.hasReachedTarget for card in deck])
 
-    checkIfStationary = []
-    for deck in decks:
-        checkIfStationary += [card.isStationary for card in deck]
-    
     global config
-    config.IS_ANYTHING_MOVING = not all(checkIfStationary)
-    del checkIfStationary
 
     margin = lambda cardCount: (config.SCREEN_WIDTH - ((cardCount - 1) * config.CARD_DRAW_OFFSET + config.CARD_WIDTH)) // 2
     for playerID, deck in enumerate(decks):
@@ -68,9 +60,9 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
             else:
                 mobile.append(card)
 
-        if len(inDeck) == 0:
-            # TODO: Do something about this
-            pass
+        if len(inDeck) == 0 and playerID == 0:
+            assert False, "render() called even though player has no cards"
+
         for index, card in enumerate(inDeck):
             if isFirstTurnInGame:
                 eligible = card.suit == 'SPADES' and card.rank == 14
@@ -79,7 +71,7 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
                     eligible = True
                 else:
                     eligible = card.suit == ongoingSuit
-            if eligible:
+            if eligible and showEligible:
                 top = config.SCREEN_HEIGHT - config.CARD_HEIGHT - config.CARD_DRAW_PADDING_BOTTOM - config.ELIGIBLE_CARD_HEIGHT_OFFSET
             else:
                 top = config.SCREEN_HEIGHT - config.CARD_HEIGHT - config.CARD_DRAW_PADDING_BOTTOM
@@ -92,13 +84,14 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
                 width = config.CARD_WIDTH
             else:
                 left = left + config.CARD_DRAW_OFFSET
-            card.trueX = left + (width // 2)
-            card.trueY = top + (height // 2)
-            # card.trueX = DECK_RECT[playerID][0]
-            # card.trueY = DECK_RECT[playerID][1]
+            # card.trueX = left + (width // 2)
+            # card.trueY = top + (height // 2)
+            card.trueX = config.DECK_RECT[playerID][0]
+            card.trueY = config.DECK_RECT[playerID][1]
+
             if playerID != 0:
                 continue
-            else:
+            else: # since only the cards in player deck are clickable we dont care about other cards' rects
                 card.rect = pygame.Rect((left, top, width, height))
                 screen.blit(card.surf, card.rect.topleft)
 
@@ -106,6 +99,14 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
             card.hasBeenMobile = True
             card.update()
             screen.blit(card.surf,card.rect.topleft) 
+
+    checkIfStationary = []
+    for deck in decks:
+        checkIfStationary += [card.isStationary for card in deck]
+    
+    config.IS_ANYTHING_MOVING = not all(checkIfStationary)
+    del checkIfStationary
+
 
 def quit():
     pygame.quit()

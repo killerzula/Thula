@@ -43,7 +43,7 @@ for player in players:
 
 def main():
     
-    index = firstPlayer
+    index = 0
     prevIndex = firstPlayer
     highestCard = firstPlayer
 
@@ -52,10 +52,11 @@ def main():
     ongoingSuit = None
     isFirstTurnInGame = True
     totalRounds = 0
-    
+    hasRendered = False
+    skipForLastPlayer = False
     pygame.init()
     clock.tick(config.FPS)
-    flag = False
+    
     while True:
 
         screen.blit(canvas,(0,0))
@@ -71,68 +72,37 @@ def main():
         
         ### PERFROM COMPUTATIONS
         print(config.IS_ANYTHING_MOVING)
-        if flag:
-            if not config.IS_ANYTHING_MOVING: # only do this stuff when nothing is moving
-                if len(players[index].cards) != 0: # if the player still has cards        
-                    players[index].isTurn = True
-                    players[index].getCard(ongoingSuit=ongoingSuit, isFirstTurnInGame=isFirstTurnInGame)
-                    players[index].cardThrownThisTurn.target = config.TARGET_RECT[index]
-                    if len(cardsInPlay) == 0:   # if this is the first turn in current round
-                        totalRounds += 1
-                        ongoingSuit = players[index].cardThrownThisTurn.suit
-                        highestCard = index
 
-                    cardsInPlay.append(players[index].cardThrownThisTurn)
-                    playersInPlay.append(index)
-                    
-                assert not players[index].isTurn # make sure current player has completed turn
+        if not config.IS_ANYTHING_MOVING and hasRendered:
+            
+            players[index].isTurn = True
+            isFirstTurnInGame = False
+            cardsInPlay.append(
+                players[index].getCard(ongoingSuit,isFirstTurnInGame)
+            )
+            players[index].isTurn = False
+            players[index].cardThrownThisTurn.target = config.TARGET_RECT[index]
 
-                if len(cardsInPlay) > 1:
-                    if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank:
-                        highestCard = highestCard
-                    else: 
-                        highestCard = index
+            index = index + 1 if index != 3 else 0
 
-                    thula = isThula([
-                        players[index].cardThrownThisTurn,
-                        players[prevIndex].cardThrownThisTurn
-                    ])
-                    
-                    prevIndex = index
-                    index = index + 1 if index != 3 else 0 # update index for next player             
-
-                    if thula:
-                        for idx, card in enumerate(cardsInPlay):
-                            if card.isStationary:
-                                card.target = config.DECK_RECT[highestCard]
-                                players[playersInPlay[idx]].cards.remove(card)
-                        players[highestCard].insert(cardsInPlay)
-                        cardsInPlay = []
-                        playersInPlay = []
-                        index = highestCard
-
-                    if not thula and len(cardsInPlay) == 4:
-                        for idx, card in enumerate(cardsInPlay):
-                            if card.isStationary:
-                                card.target = config.DECK_RECT[highestCard]
-                                players[playersInPlay[idx]].cards.remove(card)
-                        cardsInPlay = []
-                        playersInPlay = []
-                        index = highestCard
-                        
-
-        ### RENDER STUFF
+            if index == 0:
+                for card in cardsInPlay:
+                    card.target = config.OFFSCREEN_RECT
 
         renderCards(
             screen=screen,
             decks=[player0.cards, player1.cards, player2.cards, player3.cards], # deck order is important
             ongoingSuit = ongoingSuit,
-            isFirstTurnInGame=isFirstTurnInGame
+            isFirstTurnInGame=isFirstTurnInGame,
+            showEligible = player0.id not in playersInPlay 
             )
-        flag = True
-        isFirstTurnInGame = False
+
+        hasRendered = True
+        
         pygame.display.flip()
+
         print(config.IS_ANYTHING_MOVING)
+
 
 if __name__ == '__main__':
     main()

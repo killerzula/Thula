@@ -35,29 +35,19 @@ class Computer():
                 self.thulaGiven += 1
                 self.isTurn = False
                 self.cardThrownThisTurn = random.sample(self.cards, 1)[0]
-                if self.cardThrownThisTurn == None:
-                    print("hello")
-                return self.cardThrownThisTurn 
             else:
                 self.isTurn = False
                 self.cardThrownThisTurn = random.sample(matchingCards, 1)[0]
-                if self.cardThrownThisTurn == None:
-                    print("hello")
-                return self.cardThrownThisTurn
 
         else: # if round is to be started
             if isFirstTurnInGame:
                 self.cardThrownThisTurn = self.getAceOfSpades()
                 self.isTurn = False
-                if self.cardThrownThisTurn == None:
-                    print("hello")
-                return self.cardThrownThisTurn
             else:
                 self.cardThrownThisTurn = random.sample(self.cards, 1)[0]
                 self.isTurn = False
-                if self.cardThrownThisTurn == None:
-                    print("hello")
-                return self.cardThrownThisTurn
+        
+        return self.cardThrownThisTurn
 
 
     def insertCards(self, cards: list):

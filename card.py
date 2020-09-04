@@ -52,7 +52,6 @@ class Vector():
         return None
 
 
-
 class Card(pygame.sprite.Sprite):
     
     def __init__(self,image,rank,suit):
@@ -64,7 +63,7 @@ class Card(pygame.sprite.Sprite):
         '''
         super(Card,self).__init__()
         self.surf = pygame.transform.smoothscale(
-                        pygame.image.load(image).convert(), 
+                        pygame.image.load(image).convert_alpha(), 
                         (config.CARD_WIDTH, config.CARD_HEIGHT)
                     ) # load image
         self.rect = self.surf.get_rect()
@@ -157,7 +156,7 @@ class Card(pygame.sprite.Sprite):
                 self.trueY += (self.dir[1] * self.speed)
                 self.rect.center = (round(self.trueX),round(self.trueY)) # apply values to sprite.center
         else:
-            # self.hasReachedTarget = True
+            self.hasReachedTarget = True
             self.isStationary = True
 
 def main():
