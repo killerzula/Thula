@@ -48,8 +48,6 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
     # left, top, width, height
     # The above order is used for rect, see http://www.pygame.org/docs/ref/rect.html
 
-    global config
-
     margin = lambda cardCount: (config.SCREEN_WIDTH - ((cardCount - 1) * config.CARD_DRAW_OFFSET + config.CARD_WIDTH)) // 2
     for playerID, deck in enumerate(decks):
         inDeck = []
@@ -99,13 +97,6 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
             card.hasBeenMobile = True
             card.update()
             screen.blit(card.surf,card.rect.topleft) 
-
-    checkIfStationary = []
-    for deck in decks:
-        checkIfStationary += [card.isStationary for card in deck]
-    
-    config.IS_ANYTHING_MOVING = not all(checkIfStationary)
-    del checkIfStationary
 
 
 def quit():

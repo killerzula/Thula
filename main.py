@@ -43,7 +43,7 @@ for player in players:
 
 def main():
     
-    index = 0
+    index = firstPlayer
     prevIndex = firstPlayer
     highestCard = firstPlayer
 
@@ -53,16 +53,14 @@ def main():
     isFirstTurnInGame = True
     totalRounds = 0
     hasRendered = False
-    skipForLastPlayer = False
+    hasGoneOffscreen = True
+    shouldAllowNewCards = True
     pygame.init()
     clock.tick(config.FPS)
     
     while True:
 
         screen.blit(canvas,(0,0))
-
-        ### TAKE INPUTS
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit()
@@ -70,35 +68,82 @@ def main():
                 if event.key == K_ESCAPE:
                     quit()
         
-        ### PERFROM COMPUTATIONS
         print(config.IS_ANYTHING_MOVING)
 
-        if not config.IS_ANYTHING_MOVING and hasRendered:
+        # Get the card
+        # Allow getting card only if no card is moving 
+
+        if len(cardsInPlay) > 0:
+            isEverythingStill = all([card.isStationary() for card in cardsInPlay])
+
+        if not hasGoneOffscreen and isEverythingStill:
+            cardsInPlay = []
+            hasGoneOffscreen = True
+
+        if len(cardsInPlay) == 0:
+            isEverythingStill = True 
+
+        if isEverythingStill and hasRendered and shouldAllowNewCards and hasGoneOffscreen:
             
             players[index].isTurn = True
-            isFirstTurnInGame = False
             cardsInPlay.append(
                 players[index].getCard(ongoingSuit,isFirstTurnInGame)
             )
-            players[index].isTurn = False
+            isFirstTurnInGame = False
+            assert not players[index].isTurn, "Player {} has not completed their turn yet.".format(index) 
+            playersInPlay.append(index)
             players[index].cardThrownThisTurn.target = config.TARGET_RECT[index]
+            prevIndex = index
+            shouldAllowNewCards = False
+            # index = index + 1 if index != 3 else 0
 
-            index = index + 1 if index != 3 else 0
-
-            if index == 0:
-                for card in cardsInPlay:
-                    card.target = config.OFFSCREEN_RECT
-
-        renderCards(
-            screen=screen,
-            decks=[player0.cards, player1.cards, player2.cards, player3.cards], # deck order is important
-            ongoingSuit = ongoingSuit,
-            isFirstTurnInGame=isFirstTurnInGame,
-            showEligible = player0.id not in playersInPlay 
-            )
-
+        # Draw it on the screen and do not do anything else until it has reached the target
+        renderCards(screen=screen,decks=[player0.cards, player1.cards, player2.cards, player3.cards],ongoingSuit = ongoingSuit,isFirstTurnInGame=isFirstTurnInGame,showEligible = player0.id not in playersInPlay)
         hasRendered = True
-        
+
+        if len(cardsInPlay) > 1: # if this is not the first card that thrown
+            isEverythingStill = all([card.isStationary() for card in cardsInPlay])
+            if isEverythingStill:
+                thula = isThula([
+                    players[index].cardThrownThisTurn,
+                    players[prevIndex].cardThrownThisTurn
+                ])
+                if thula: # if there is a thula
+                    for player in playersInPlay:
+                        players[player].cards.remove(players[player].cardThrownThisTurn)
+                    for card in cardsInPlay:
+                        card.target = config.DECK_RECT[highestCard]
+                    players[highestCard].insert(cardsInPlay)
+                    
+                    cardsInPlay = []
+                    playersInPlay = []
+                    # prevIndex = None
+                    index = highestCard
+                    highestCard = None
+                    shouldAllowNewCards = True
+
+                else: # if there's not a thula
+                    # prevIndex = index
+                    highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
+                    index = index + 1 if index != 3 else 0
+                    shouldAllowNewCards = True
+
+        if len(cardsInPlay) == 1 and isEverythingStill: # if this is the first card that's thrown just do the following things
+                # prevIndex = 
+                ongoingSuit = cardsInPlay[0].suit
+                totalRounds += 1
+                index = index + 1 if index != 3 else 0
+                highestCard = index
+                shouldAllowNewCards = True
+
+        if len(cardsInPlay) == 4 and isEverythingStill: # if not thula and round complete
+            for player in playersInPlay:
+                players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
+                # cardsInPlay = []
+                playersInPlay = []
+            hasGoneOffscreen = False
+            shouldAllowNewCards = True
+
         pygame.display.flip()
 
         print(config.IS_ANYTHING_MOVING)

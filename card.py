@@ -74,7 +74,6 @@ class Card(pygame.sprite.Sprite):
         self.speed = 20 # movement speed of the sprite
         self.speedX = 0 # speed in x direction
         self.speedY = 0 # speed in y direction
-        self.isStationary = True
         self.hasReachedTarget = False
         self.target = None # starts off with no target
 
@@ -147,17 +146,17 @@ class Card(pygame.sprite.Sprite):
         
         self.dir = self.get_direction(self.target) # get direction
         if self.dir: # if there is a direction to move
-            self.isStationary = False
             if self.distance_check(self.dist): # if we need to stop
                 self.rect.center = self.target # center the sprite on the target
-                
             else: # if we need to move normal
                 self.trueX += (self.dir[0] * self.speed) # calculate speed from direction to move and speed constant
                 self.trueY += (self.dir[1] * self.speed)
                 self.rect.center = (round(self.trueX),round(self.trueY)) # apply values to sprite.center
         else:
             self.hasReachedTarget = True
-            self.isStationary = True
+
+    def isStationary(self):
+        return self.get_direction(self.target) == None
 
 def main():
 

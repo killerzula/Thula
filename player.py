@@ -68,8 +68,8 @@ class Player():
                     if event.type == pygame.MOUSEBUTTONUP:
                         for card in self.spriteGroup:
                             if isFirstTurnInGame: # if this is the first round in the game
-                                # if card.rect.collidepoint(event.pos) and card.suit == 'SPADES' and card.rank == 14:
-                                if card.rect.collidepoint(event.pos):
+                                if card.rect.collidepoint(event.pos) and card.suit == 'SPADES' and card.rank == 14:
+                                # if card.rect.collidepoint(event.pos):
                                     # in case of first round in game player should only throw the ace of spades
                                     self.cardThrownThisTurn = card
                                     self.isTurn = False

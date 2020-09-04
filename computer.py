@@ -20,7 +20,6 @@ class Computer():
     def getAceOfSpades(self):
         for card in self.cards:
             if card.suit == 'SPADES' and card.rank == 14:
-                self.hasAceOfSpades = True
                 return card
     
     def getCard(self, ongoingSuit: str, isFirstTurnInGame:bool):
