@@ -1,6 +1,6 @@
 import pygame, random
 import utils
-
+from card import Card
 
 class Computer():
 
@@ -13,6 +13,7 @@ class Computer():
         self.isTurn = False
         self.cardThrownThisTurn = None
         self.hasAceOfSpades = False
+        self.proteusTrumpCard = Card(image='assets/cards/queen_of_hearts.png', rank = -1, suit='PROTEAN')
         for card in self.cards:
             if card.suit == 'SPADES' and card.rank == 14:
                 self.hasAceOfSpades = True
@@ -24,29 +25,36 @@ class Computer():
     
     def getCard(self, ongoingSuit: str, isFirstTurnInGame:bool):
         assert self.isTurn, "Wait for your turn, please"
-        if ongoingSuit: # if round is ongoing
-            cards = filter(lambda c: c.suit == ongoingSuit, self.cards)
-            matchingCards = []
-            for card in cards:
-                matchingCards.append(card)
-
-            if len(matchingCards) == 0:
-                self.thulaGiven += 1
-                self.isTurn = False
-                self.cardThrownThisTurn = random.sample(self.cards, 1)[0]
-            else:
-                self.isTurn = False
-                self.cardThrownThisTurn = random.sample(matchingCards, 1)[0]
-
-        else: # if round is to be started
-            if isFirstTurnInGame:
-                self.cardThrownThisTurn = self.getAceOfSpades()
-                self.isTurn = False
-            else:
-                self.cardThrownThisTurn = random.sample(self.cards, 1)[0]
-                self.isTurn = False
         
-        return self.cardThrownThisTurn
+        if len(self.cards) > 0:
+            if ongoingSuit: # if round is ongoing
+                cards = filter(lambda c: c.suit == ongoingSuit, self.cards)
+                matchingCards = []
+                for card in cards:
+                    matchingCards.append(card)
+
+                if len(matchingCards) == 0:
+                    self.thulaGiven += 1
+                    self.isTurn = False
+                    self.cardThrownThisTurn = random.sample(self.cards, 1)[0]
+                else:
+                    self.isTurn = False
+                    self.cardThrownThisTurn = random.sample(matchingCards, 1)[0]
+
+            else: # if round is to be started
+                if isFirstTurnInGame:
+                    self.cardThrownThisTurn = self.getAceOfSpades()
+                    self.isTurn = False
+                else:
+                    self.cardThrownThisTurn = random.sample(self.cards, 1)[0]
+                    self.isTurn = False
+            
+            return self.cardThrownThisTurn
+        
+        else:
+            self.cardThrownThisTurn = self.proteusTrumpCard
+            self.isTurn = False
+            return self.cardThrownThisTurn
 
 
     def insertCards(self, cards: list):

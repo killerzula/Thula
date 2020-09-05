@@ -58,11 +58,15 @@ getInformation = lambda x: "Cards in Hand: {}\nThulas Received: {}\nThulas Besto
                         x.thulaGiven
                     )
 
+# getIndexBeforeProteus = lambda x: len(x)-1 if players[x].cardThrownThisTurn.suit != 'PROTEAN' else getIndexBeforeProteus(x[:-1])
+
+
 def main():
     
     index = firstPlayer
     highestCard = firstPlayer
 
+    hasProteusVisited = False
     cardsInPlay = []
     playersInPlay = []
     ongoingSuit = None
@@ -71,9 +75,21 @@ def main():
     hasRendered = False
     hasGoneOffscreen = True
     shouldAllowNewCards = True
+    cardThisTurn = None
+    text = []
+
+    def getIndexBeforeProteus(playersInPlay:list):
+        if not hasProteusVisited:
+            return playersInPlay[-2]
+        else:
+            if playersInPlay[-1].suit == 'PROTEAN':
+                return playersInPlay[-1] 
+            else:
+                getIndexBeforeProteus(playersInPlay[0:-1])
+
     pygame.init()
     clock.tick(config.FPS)
-    text = []
+    
     while True:
 
         screen.blit(canvas,(0,0))
@@ -89,11 +105,11 @@ def main():
         if len(player0.cards) == 0:
             quit()
 
-        # information[0] =  
-
-
         # Get the card
         # Allow getting card only if no card is moving 
+
+        if hasProteusVisited:
+            cardThisTurn.update()
 
         if len(cardsInPlay) > 0:
             isEverythingStill = all([card.isStationary() for card in cardsInPlay])
@@ -117,67 +133,69 @@ def main():
             isEverythingStill = True 
 
         # glowEdge(screen=screen, playerID=index)
-        if len(players[index].cards) != 0:
-            if isEverythingStill and hasRendered and shouldAllowNewCards and hasGoneOffscreen:
-                
-                players[index].isTurn = True
-                cardsInPlay.append(
-                    players[index].getCard(ongoingSuit,isFirstTurnInGame)
-                )
-                isFirstTurnInGame = False
-                assert not players[index].isTurn, "Player {} has not completed their turn yet.".format(index) 
-                playersInPlay.append(index)
-                players[index].cardThrownThisTurn.target = config.TARGET_RECT[index]
-                shouldAllowNewCards = False
+        if isEverythingStill and hasRendered and shouldAllowNewCards and hasGoneOffscreen:
+            
+            players[index].isTurn = True
+            cardThisTurn = players[index].getCard(ongoingSuit,isFirstTurnInGame)
+            cardsInPlay.append(cardThisTurn)
+            isFirstTurnInGame = False
+            assert not players[index].isTurn, "Player {} has not completed their turn yet.".format(index) 
+            playersInPlay.append(index)
+            players[index].cardThrownThisTurn.target = config.TARGET_RECT[index]
+            shouldAllowNewCards = False
+            if cardsInPlay[-1].suit == 'PROTEAN':
+                hasProteusVisited = True
+                shouldAllowNewCards = True
+                if len(cardsInPlay) == 1:
+                    ongoingSuit = None
 
-            # Draw it on the screen and do not do anything else until it has reached the target
-            renderCards(screen=screen,decks=[player0.cards, player1.cards, player2.cards, player3.cards],ongoingSuit = ongoingSuit,isFirstTurnInGame=isFirstTurnInGame,showEligible = player0.id not in playersInPlay)
-            hasRendered = True
+        # Draw it on the screen and do not do anything else until it has reached the target
+        renderCards(screen=screen,decks=[player0.cards, player1.cards, player2.cards, player3.cards],ongoingSuit = ongoingSuit,isFirstTurnInGame=isFirstTurnInGame,showEligible = player0.id not in playersInPlay)
+        hasRendered = True
 
-            if len(cardsInPlay) > 1: # if this is not the first card that thrown
-                isEverythingStill = all([card.isStationary() for card in cardsInPlay])
-                if isEverythingStill and hasGoneOffscreen:
-                    thula = isThula([
-                        players[index].cardThrownThisTurn,
-                        players[playersInPlay[-2]].cardThrownThisTurn
-                    ])
-                    if thula: # if there is a thula
-                        pygame.time.wait(config.DELAY_AFTER_THULA)
-                        for card in cardsInPlay:
-                            card.target = config.DECK_RECT[highestCard]
-                        players[highestCard].insertCards(cardsInPlay)
-                        ongoingSuit = None
-                        isEverythingStill = False
-                        hasGoneOffscreen = False
-                        index = highestCard
-                        highestCard = None
-                        shouldAllowNewCards = True
+        if (len(cardsInPlay) > 1 and not hasProteusVisited) or (len(cardsInPlay)> 2 and hasProteusVisited): # if this is not the first card that thrown
+            isEverythingStill = all([card.isStationary() for card in cardsInPlay])
+            if isEverythingStill and hasGoneOffscreen:
+                assert not players[index].cardThrownThisTurn.suit == 'PROTEAN', "Proteus is not happy..." 
+                thula = isThula([
+                    players[index].cardThrownThisTurn,
+                    players[getIndexBeforeProteus(playersInPlay)].cardThrownThisTurn
+                ])
+                if thula: # if there is a thula
+                    pygame.time.wait(config.DELAY_AFTER_THULA)
+                    for card in cardsInPlay:
+                        card.target = config.DECK_RECT[highestCard]
+                    players[highestCard].insertCards(cardsInPlay)
+                    ongoingSuit = None
+                    isEverythingStill = False
+                    hasGoneOffscreen = False
+                    hasProteusVisited = False
+                    index = highestCard
+                    highestCard = None
+                    shouldAllowNewCards = True
 
-                    else: # if there's not a thula
-                        highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
-                        index = index + 1 if index != 3 else 0
-                        shouldAllowNewCards = True
-
-            if len(cardsInPlay) == 1 and isEverythingStill: # if this is the first card that's thrown just do the following things
-                    ongoingSuit = cardsInPlay[0].suit
-                    totalRounds += 1
-                    highestCard = index
+                else: # if there's not a thula
+                    highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
                     index = index + 1 if index != 3 else 0
                     shouldAllowNewCards = True
 
-            if len(cardsInPlay) == 4 and isEverythingStill and not thula: # if not thula and round complete
-                for player in playersInPlay:
-                    players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
-                highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
-                index = highestCard
-                ongoingSuit = None
-                hasGoneOffscreen = False
+        if len(cardsInPlay) == 1 and isEverythingStill: # if this is the first card that's thrown just do the following things
+                ongoingSuit = cardsInPlay[0].suit
+                totalRounds += 1
+                highestCard = index
+                index = index + 1 if index != 3 else 0
                 shouldAllowNewCards = True
-                pygame.time.wait(config.DELAY_AFTER_ROUND_NO_THULA)
 
-        else:
-            # if current player has no cards just pass the turn
-            index = index + 1 if index != 3 else 0
+        if len(cardsInPlay) == 4 and isEverythingStill and not thula: # if not thula and round complete
+            for player in playersInPlay:
+                players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
+            highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
+            index = highestCard
+            ongoingSuit = None
+            hasGoneOffscreen = False
+            hasProteusVisited = False
+            shouldAllowNewCards = True
+            pygame.time.wait(config.DELAY_AFTER_ROUND_NO_THULA)
 
         pygame.display.flip()
 
