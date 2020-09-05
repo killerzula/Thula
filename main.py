@@ -9,6 +9,8 @@ from computer import Computer
 
 from pygame.locals import (
     K_ESCAPE,
+    K_k,
+    K_SPACE,
     KEYDOWN,
     QUIT,
 )
@@ -45,14 +47,18 @@ for player in players:
         break
 
 
-def getInformation(player:Player):
-    return "Cards in Hand: {}\nThulas Received: {}\nThulas Bestowed: {}".format(
-            len(player.cards),
-            player.thulaReceived,
-            player.thulaGiven
-        )
+# def getInformation(player:Player):
+#     return "Cards in Hand: {}\nThulas Received: {}\nThulas Bestowed: {}".format(
+#             len(player.cards),
+#             player.thulaReceived,
+#             player.thulaGiven
+#         )
 
 getInformation = lambda x: "Cards in Hand: {}\nThulas Received: {}\nThulas Bestowed: {}".format(
+                        len(x.cards),
+                        x.thulaReceived,
+                        x.thulaGiven
+                    ) if x.id % 2 else "Cards in Hand: {}       Thulas Received: {}       Thulas Bestowed: {}".format(
                         len(x.cards),
                         x.thulaReceived,
                         x.thulaGiven
@@ -62,7 +68,7 @@ def main():
     
     index = firstPlayer
     highestCard = firstPlayer
-
+    toggleInformation = True
     cardsInPlay = []
     playersInPlay = []
     ongoingSuit = None
@@ -71,6 +77,7 @@ def main():
     hasRendered = False
     hasGoneOffscreen = True
     shouldAllowNewCards = True
+    thula = False
     pygame.init()
     clock.tick(config.FPS)
     text = []
@@ -85,15 +92,11 @@ def main():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     quit()
+                if event.key == K_k:
+                    toggleInformation = not toggleInformation
 
         if len(player0.cards) == 0:
             quit()
-
-        # information[0] =  
-
-
-        # Get the card
-        # Allow getting card only if no card is moving 
 
         if len(cardsInPlay) > 0:
             isEverythingStill = all([card.isStationary() for card in cardsInPlay])
@@ -102,16 +105,17 @@ def main():
             # this condition and loop is inserted for removing cards only after they have moved to their destination
             for player in playersInPlay:
                 players[player].cardThrownThisTurn.target = None
-                if players[player].cardThrownThisTurn: # if player has not run out of cards
+                if players[player].cardThrownThisTurn in players[player].cards: # if player has not run out of cards
                     players[player].cards.remove(players[player].cardThrownThisTurn)
             cardsInPlay = []
             playersInPlay = []
             hasRendered = False # allow for rendering after cards have been moved (causes issue without this after thula)
             hasGoneOffscreen = True
 
-        for idx, player in enumerate(players): # get all the information that is to be displayed
-            text = getInformation(player)
-            blit_text(screen, text, config.TEXT_RECT[idx], font)
+        if toggleInformation:
+            for idx, player in enumerate(players): # get all the information that is to be displayed
+                text = getInformation(player)
+                blit_text(screen, text, config.TEXT_RECT[idx], font)
 
         if len(cardsInPlay) == 0:
             isEverythingStill = True 
@@ -119,7 +123,7 @@ def main():
         # glowEdge(screen=screen, playerID=index)
         if len(players[index].cards) != 0:
             if isEverythingStill and hasRendered and shouldAllowNewCards and hasGoneOffscreen:
-                
+                assert not index in playersInPlay, "Player {} has already played his turn".format(index)
                 players[index].isTurn = True
                 cardsInPlay.append(
                     players[index].getCard(ongoingSuit,isFirstTurnInGame)
@@ -165,7 +169,7 @@ def main():
                     index = index + 1 if index != 3 else 0
                     shouldAllowNewCards = True
 
-            if len(cardsInPlay) == 4 and isEverythingStill and not thula: # if not thula and round complete
+            if index in playersInPlay and isEverythingStill and not thula: # if not thula and round complete
                 for player in playersInPlay:
                     players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
                 highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
