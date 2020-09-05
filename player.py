@@ -90,5 +90,5 @@ class Player():
     def insertCards(self, cards: list):
         self.thulaReceived += 1 # cards are only inserted in case of thula
         for card in cards:
-            self.cards.insert(card)
+            self.cards.append(card)
         self.cards = utils.sortCards(self.cards)       

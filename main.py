@@ -44,7 +44,7 @@ for player in players:
 def main():
     
     index = firstPlayer
-    prevIndex = firstPlayer
+    # prevIndex = firstPlayer
     highestCard = firstPlayer
 
     cardsInPlay = []
@@ -68,21 +68,23 @@ def main():
                 if event.key == K_ESCAPE:
                     quit()
         
-        print(config.IS_ANYTHING_MOVING)
-
         # Get the card
         # Allow getting card only if no card is moving 
 
         if len(cardsInPlay) > 0:
             isEverythingStill = all([card.isStationary() for card in cardsInPlay])
 
-        if not hasGoneOffscreen and isEverythingStill:
+        if not hasGoneOffscreen and isEverythingStill: # after round completion without thula
+            for player in playersInPlay:
+                players[player].cards.remove(players[player].cardThrownThisTurn)
             cardsInPlay = []
+            playersInPlay = []
             hasGoneOffscreen = True
 
         if len(cardsInPlay) == 0:
             isEverythingStill = True 
 
+        # glowEdge(screen=screen, playerID=index)
         if isEverythingStill and hasRendered and shouldAllowNewCards and hasGoneOffscreen:
             
             players[index].isTurn = True
@@ -93,9 +95,8 @@ def main():
             assert not players[index].isTurn, "Player {} has not completed their turn yet.".format(index) 
             playersInPlay.append(index)
             players[index].cardThrownThisTurn.target = config.TARGET_RECT[index]
-            prevIndex = index
+            # prevIndex = index
             shouldAllowNewCards = False
-            # index = index + 1 if index != 3 else 0
 
         # Draw it on the screen and do not do anything else until it has reached the target
         renderCards(screen=screen,decks=[player0.cards, player1.cards, player2.cards, player3.cards],ongoingSuit = ongoingSuit,isFirstTurnInGame=isFirstTurnInGame,showEligible = player0.id not in playersInPlay)
@@ -106,14 +107,15 @@ def main():
             if isEverythingStill:
                 thula = isThula([
                     players[index].cardThrownThisTurn,
-                    players[prevIndex].cardThrownThisTurn
+                    players[playersInPlay[-2]].cardThrownThisTurn
                 ])
                 if thula: # if there is a thula
-                    for player in playersInPlay:
-                        players[player].cards.remove(players[player].cardThrownThisTurn)
+                    # for player in playersInPlay:
+                        # players[player].cards.remove(players[player].cardThrownThisTurn)
+                    pygame.time.wait(1000)
                     for card in cardsInPlay:
                         card.target = config.DECK_RECT[highestCard]
-                    players[highestCard].insert(cardsInPlay)
+                    players[highestCard].insertCards(cardsInPlay)
                     
                     cardsInPlay = []
                     playersInPlay = []
@@ -132,21 +134,21 @@ def main():
                 # prevIndex = 
                 ongoingSuit = cardsInPlay[0].suit
                 totalRounds += 1
-                index = index + 1 if index != 3 else 0
                 highestCard = index
+                index = index + 1 if index != 3 else 0
                 shouldAllowNewCards = True
 
         if len(cardsInPlay) == 4 and isEverythingStill: # if not thula and round complete
             for player in playersInPlay:
                 players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
-                # cardsInPlay = []
-                playersInPlay = []
+            highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
+            index = highestCard
+            ongoingSuit = None
             hasGoneOffscreen = False
             shouldAllowNewCards = True
+            pygame.time.wait(1000)
 
         pygame.display.flip()
-
-        print(config.IS_ANYTHING_MOVING)
 
 
 if __name__ == '__main__':

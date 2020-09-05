@@ -104,25 +104,25 @@ def quit():
     sys.exit()
 
 
-def glowEdge(screen,player):
+def glowEdge(screen:pygame.Surface, playerID:int):
     
     # Rect(left, top, width, height) -> Rect
 
-    if player == 0:
+    if playerID == 0:
         rect = (
             0,
             config.SCREEN_HEIGHT - config.GLOW_THICKNESS,
             config.SCREEN_WIDTH,
             config.GLOW_THICKNESS
             )
-    elif player == 1:
+    elif playerID == 1:
         rect = (
             0,
             0,
             config.GLOW_THICKNESS,
             config.SCREEN_HEIGHT
         )
-    elif player == 2:
+    elif playerID == 2:
         rect = (
             0,
             0,

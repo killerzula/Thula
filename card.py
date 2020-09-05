@@ -71,7 +71,7 @@ class Card(pygame.sprite.Sprite):
         self.trueX = -100 # created because self.rect.center does not hold
         self.trueY = -100 # decimal values but these do
         self.rect.center = (self.trueX, self.trueY) # set starting position
-        self.speed = 20 # movement speed of the sprite
+        self.speed = config.CARD_ANIMATION_SPEED # movement speed of the sprite
         self.speedX = 0 # speed in x direction
         self.speedY = 0 # speed in y direction
         self.hasReachedTarget = False
