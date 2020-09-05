@@ -94,7 +94,6 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
                 screen.blit(card.surf, card.rect.topleft)
 
         for card in mobile:
-            card.hasBeenMobile = True
             card.update()
             screen.blit(card.surf,card.rect.topleft) 
 
@@ -142,3 +141,21 @@ def glowEdge(screen:pygame.Surface, playerID:int):
 def isThula(cards:list):
     assert len(cards) == 2, "Cards provided for thula check must be only 2"
     return cards[0].suit != cards[1].suit
+
+
+def blit_text(surface, text, pos, font, color=pygame.Color('white')):
+    words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
+    space = font.size(' ')[0]  # The width of a space.
+    max_width, _ = surface.get_size()
+    x, y = pos
+    for line in words:
+        for word in line:
+            word_surface = font.render(word, 1, color)
+            word_width, word_height = word_surface.get_size()
+            if x + word_width >= max_width:
+                x = pos[0]  # Reset the x.
+                y += word_height  # Start on new row.
+            surface.blit(word_surface, (x, y))
+            x += word_width + space
+        x = pos[0]  # Reset the x.
+        y += word_height  # Start on new row.

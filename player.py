@@ -91,4 +91,5 @@ class Player():
         self.thulaReceived += 1 # cards are only inserted in case of thula
         for card in cards:
             self.cards.append(card)
+            self.spriteGroup.add(card)
         self.cards = utils.sortCards(self.cards)       
