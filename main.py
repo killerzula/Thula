@@ -83,7 +83,8 @@ def main():
     text = []
     while True:
 
-        screen.blit(canvas,(0,0))
+        # screen.blit(canvas,(0,0))
+        screen.fill((148,0,211))
 
 
         for event in pygame.event.get():
@@ -105,7 +106,7 @@ def main():
             # this condition and loop is inserted for removing cards only after they have moved to their destination
             for player in playersInPlay:
                 players[player].cardThrownThisTurn.target = None
-                if players[player].cardThrownThisTurn in players[player].cards: # if player has not run out of cards
+                if players[player].cardThrownThisTurn in players[player].cards: 
                     players[player].cards.remove(players[player].cardThrownThisTurn)
             cardsInPlay = []
             playersInPlay = []
@@ -119,6 +120,17 @@ def main():
 
         if len(cardsInPlay) == 0:
             isEverythingStill = True 
+
+
+        if index in playersInPlay and isEverythingStill and not thula: # if not thula and round complete
+            for player in playersInPlay:
+                players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
+            highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
+            index = highestCard
+            ongoingSuit = None
+            hasGoneOffscreen = False
+            shouldAllowNewCards = True
+            pygame.time.wait(config.DELAY_AFTER_ROUND_NO_THULA)
 
         # glowEdge(screen=screen, playerID=index)
         if len(players[index].cards) != 0:
@@ -169,15 +181,15 @@ def main():
                     index = index + 1 if index != 3 else 0
                     shouldAllowNewCards = True
 
-            if index in playersInPlay and isEverythingStill and not thula: # if not thula and round complete
-                for player in playersInPlay:
-                    players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
-                highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
-                index = highestCard
-                ongoingSuit = None
-                hasGoneOffscreen = False
-                shouldAllowNewCards = True
-                pygame.time.wait(config.DELAY_AFTER_ROUND_NO_THULA)
+            # if index in playersInPlay and isEverythingStill and not thula: # if not thula and round complete
+            #     for player in playersInPlay:
+            #         players[player].cardThrownThisTurn.target = config.OFFSCREEN_RECT
+            #     highestCard = highestCard if players[highestCard].cardThrownThisTurn.rank > players[index].cardThrownThisTurn.rank else index
+            #     index = highestCard
+            #     ongoingSuit = None
+            #     hasGoneOffscreen = False
+            #     shouldAllowNewCards = True
+            #     pygame.time.wait(config.DELAY_AFTER_ROUND_NO_THULA)
 
         else:
             # if current player has no cards just pass the turn
