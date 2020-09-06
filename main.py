@@ -193,6 +193,7 @@ def main():
 
         else:
             # if current player has no cards just pass the turn
+            renderCards(screen=screen,decks=[player0.cards, player1.cards, player2.cards, player3.cards],ongoingSuit = ongoingSuit,isFirstTurnInGame=isFirstTurnInGame,showEligible = player0.id not in playersInPlay)
             index = index + 1 if index != 3 else 0
 
         pygame.display.flip()

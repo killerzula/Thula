@@ -82,8 +82,6 @@ def renderCards(screen:pygame.Surface, decks:list, ongoingSuit:str, isFirstTurnI
                 width = config.CARD_WIDTH
             else:
                 left = left + config.CARD_DRAW_OFFSET
-            # card.trueX = left + (width // 2)
-            # card.trueY = top + (height // 2)
             card.trueX = config.DECK_RECT[playerID][0]
             card.trueY = config.DECK_RECT[playerID][1]
 
@@ -144,8 +142,9 @@ def isThula(cards:list):
 
 
 def blit_text(surface, text, pos, font, color=pygame.Color('white')):
-    words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
-    space = font.size(' ')[0]  # The width of a space.
+    # This function is courtesy of Ted Klein Bergman. See: https://stackoverflow.com/a/42015712
+    words = [word.split(' ') for word in text.splitlines()]  
+    space = font.size(' ')[0] 
     max_width, _ = surface.get_size()
     x, y = pos
     for line in words:
@@ -153,9 +152,9 @@ def blit_text(surface, text, pos, font, color=pygame.Color('white')):
             word_surface = font.render(word, 1, color)
             word_width, word_height = word_surface.get_size()
             if x + word_width >= max_width:
-                x = pos[0]  # Reset the x.
-                y += word_height  # Start on new row.
+                x = pos[0] 
+                y += word_height  
             surface.blit(word_surface, (x, y))
             x += word_width + space
-        x = pos[0]  # Reset the x.
-        y += word_height  # Start on new row.
+        x = pos[0] 
+        y += word_height  
